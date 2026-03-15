@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(gh auth:*)",
+      "Bash(git -C \"c:/Users/dillo/OneDrive/Documents/Claude\" config user.name)",
+      "Bash(git -C \"c:/Users/dillo/OneDrive/Documents/Claude\" config user.email)",
+      "Bash(git --version)",
+      "Bash(git -C c:/Users/dillo/OneDrive/Documents/Claude config --global user.name)",
+      "Bash(git -C c:/Users/dillo/OneDrive/Documents/Claude config --list)"
+    ]
+  }
+}
