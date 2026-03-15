@@ -10,6 +10,13 @@
 
   <header class="app-header">
     <div class="header-left">
+      <button id="btn-menu" class="icon-btn" aria-label="Main menu">
+        <svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg>
+      </button>
+      <span class="header-logo">
+        <svg viewBox="0 0 24 24" width="28" height="28"><path fill="#4285F4" d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zM9 14H7v-2h2v2zm4 0h-2v-2h2v2zm4 0h-2v-2h2v2zm-8 4H7v-2h2v2zm4 0h-2v-2h2v2zm4 0h-2v-2h2v2z"/></svg>
+        Calendar
+      </span>
       <button id="btn-today">Today</button>
       <div class="header-nav">
         <button id="btn-prev" aria-label="Previous month">
@@ -39,23 +46,61 @@
     </div>
   </header>
 
-  <main class="calendar-container">
-    <div class="day-headers" aria-hidden="true">
-      <span>Sun</span>
-      <span>Mon</span>
-      <span>Tue</span>
-      <span>Wed</span>
-      <span>Thu</span>
-      <span>Fri</span>
-      <span>Sat</span>
-    </div>
-    <div id="calendar-grid" role="grid" aria-label="Calendar"></div>
-  </main>
+  <div class="app-body">
 
-  <button id="btn-add-event" aria-label="Add event">
-    <svg viewBox="0 0 24 24" width="24" height="24"><path fill="currentColor" d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
-    <span>New event</span>
-  </button>
+    <aside class="sidebar" id="sidebar">
+      <button id="btn-add-event" aria-label="Create new event">
+        <svg viewBox="0 0 24 24" width="22" height="22"><path fill="currentColor" d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+        <span>New event</span>
+      </button>
+
+      <div class="cal-section">
+        <div class="cal-section-header">
+          <span>My calendars</span>
+          <button class="cal-section-toggle" aria-label="Toggle section" data-target="my-cals">
+            <svg viewBox="0 0 24 24" width="16" height="16"><path fill="currentColor" d="M7 14l5-5 5 5z"/></svg>
+          </button>
+        </div>
+        <div class="cal-section-body" id="my-cals">
+          <label class="cal-item">
+            <input type="checkbox" id="cb-user-events" checked style="--cb-color: #1a73e8" />
+            <span class="cal-item-name">Dillon M</span>
+          </label>
+        </div>
+      </div>
+
+      <div class="cal-section">
+        <div class="cal-section-header">
+          <span>Other calendars</span>
+          <button class="cal-section-toggle" aria-label="Toggle section" data-target="other-cals">
+            <svg viewBox="0 0 24 24" width="16" height="16"><path fill="currentColor" d="M7 14l5-5 5 5z"/></svg>
+          </button>
+        </div>
+        <div class="cal-section-body" id="other-cals">
+          <label class="cal-item">
+            <input type="checkbox" id="cb-holidays" checked style="--cb-color: #0b8043" />
+            <span class="cal-item-name">Holidays in United States</span>
+          </label>
+        </div>
+      </div>
+    </aside>
+
+    <div class="calendar-area">
+      <main class="calendar-container">
+        <div class="day-headers" aria-hidden="true">
+          <span>Sun</span>
+          <span>Mon</span>
+          <span>Tue</span>
+          <span>Wed</span>
+          <span>Thu</span>
+          <span>Fri</span>
+          <span>Sat</span>
+        </div>
+        <div id="calendar-grid" role="grid" aria-label="Calendar"></div>
+      </main>
+    </div>
+
+  </div>
 
   <dialog id="event-modal" aria-labelledby="modal-title">
     <h2 id="modal-title">Add Event</h2>

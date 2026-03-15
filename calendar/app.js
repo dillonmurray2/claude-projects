@@ -17,10 +17,48 @@ const COLORS = ['blue', 'green', 'red', 'orange', 'purple'];
 // ===== STATE =====
 
 const state = {
-  currentYear:  new Date().getFullYear(),
-  currentMonth: new Date().getMonth(), // 0-indexed
-  editingId:    null
+  currentYear:    new Date().getFullYear(),
+  currentMonth:   new Date().getMonth(), // 0-indexed
+  editingId:      null,
+  showUserEvents: true,
+  showHolidays:   true
 };
+
+// ===== US HOLIDAYS =====
+
+function getUSHolidays(year) {
+  // Returns the day-of-month for the Nth occurrence of weekday in a month (0=Sun)
+  function nthWeekday(y, month, weekday, n) {
+    const d = new Date(y, month, 1);
+    let count = 0;
+    while (true) {
+      if (d.getDay() === weekday) { count++; if (count === n) return d.getDate(); }
+      d.setDate(d.getDate() + 1);
+    }
+  }
+  // Last occurrence of weekday in a month
+  function lastWeekday(y, month, weekday) {
+    const d = new Date(y, month + 1, 0);
+    while (d.getDay() !== weekday) d.setDate(d.getDate() - 1);
+    return d.getDate();
+  }
+  const fmt = (m, d) =>
+    `${year}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+
+  return [
+    { date: fmt(0, 1),                              title: "New Year's Day" },
+    { date: fmt(0, nthWeekday(year, 0, 1, 3)),      title: "Martin Luther King Jr. Day" },
+    { date: fmt(1, nthWeekday(year, 1, 1, 3)),      title: "Presidents' Day" },
+    { date: fmt(4, lastWeekday(year, 4, 1)),         title: "Memorial Day" },
+    { date: fmt(5, 19),                              title: "Juneteenth" },
+    { date: fmt(6, 4),                               title: "Independence Day" },
+    { date: fmt(8, nthWeekday(year, 8, 1, 1)),      title: "Labor Day" },
+    { date: fmt(9, nthWeekday(year, 9, 1, 2)),      title: "Columbus Day" },
+    { date: fmt(10, 11),                             title: "Veterans Day" },
+    { date: fmt(10, nthWeekday(year, 10, 4, 4)),    title: "Thanksgiving Day" },
+    { date: fmt(11, 25),                             title: "Christmas Day" },
+  ];
+}
 
 // ===== STORAGE =====
 
@@ -124,39 +162,56 @@ function updateHeaderLabel() {
 }
 
 function renderEventsInCell(dateStr, cellEl) {
-  const events = loadEvents().filter(e => e.date === dateStr);
-  if (!events.length) return;
-
   const list = document.createElement('div');
   list.className = 'events-list';
+  let hasAny = false;
 
-  events.forEach(ev => {
-    const chip = document.createElement('button');
-    chip.type = 'button';
-    chip.dataset.eventId = ev.id;
-    chip.dataset.color = ev.color;
-    chip.setAttribute('aria-label', `Edit event: ${ev.title}`);
+  // Holidays first (always rendered as all-day green pills)
+  if (state.showHolidays) {
+    const year = Number(dateStr.split('-')[0]);
+    getUSHolidays(year)
+      .filter(h => h.date === dateStr)
+      .forEach(h => {
+        const chip = document.createElement('div');
+        chip.className = 'event-chip event-chip--allday event-chip--holiday';
+        chip.textContent = h.title;
+        chip.setAttribute('aria-label', h.title);
+        list.appendChild(chip);
+        hasAny = true;
+      });
+  }
 
-    if (ev.time) {
-      // Timed event: dot + "HH:MM title"
-      chip.className = 'event-chip event-chip--timed';
-      const dot  = document.createElement('span');
-      dot.className = 'event-dot';
-      const text = document.createElement('span');
-      text.className = 'event-text';
-      text.textContent = `${ev.time} ${ev.title}`;
-      chip.appendChild(dot);
-      chip.appendChild(text);
-    } else {
-      // All-day event: solid colored pill
-      chip.className = 'event-chip event-chip--allday';
-      chip.textContent = ev.title;
-    }
+  // User events
+  if (state.showUserEvents) {
+    loadEvents()
+      .filter(e => e.date === dateStr)
+      .forEach(ev => {
+        const chip = document.createElement('button');
+        chip.type = 'button';
+        chip.dataset.eventId = ev.id;
+        chip.dataset.color = ev.color;
+        chip.setAttribute('aria-label', `Edit event: ${ev.title}`);
 
-    list.appendChild(chip);
-  });
+        if (ev.time) {
+          chip.className = 'event-chip event-chip--timed';
+          const dot = document.createElement('span');
+          dot.className = 'event-dot';
+          const text = document.createElement('span');
+          text.className = 'event-text';
+          text.textContent = `${ev.time} ${ev.title}`;
+          chip.appendChild(dot);
+          chip.appendChild(text);
+        } else {
+          chip.className = 'event-chip event-chip--allday';
+          chip.textContent = ev.title;
+        }
 
-  cellEl.appendChild(list);
+        list.appendChild(chip);
+        hasAny = true;
+      });
+  }
+
+  if (hasAny) cellEl.appendChild(list);
 }
 
 function renderCalendar() {
@@ -289,6 +344,27 @@ function closeModal() {
 
 function initHandlers() {
 
+  // Sidebar checkboxes
+  document.getElementById('cb-user-events').addEventListener('change', e => {
+    state.showUserEvents = e.target.checked;
+    renderCalendar();
+  });
+
+  document.getElementById('cb-holidays').addEventListener('change', e => {
+    state.showHolidays = e.target.checked;
+    renderCalendar();
+  });
+
+  // Sidebar section collapse toggles
+  document.querySelectorAll('.cal-section-toggle').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const targetId = btn.dataset.target;
+      const body = document.getElementById(targetId);
+      body.classList.toggle('collapsed');
+      btn.classList.toggle('collapsed');
+    });
+  });
+
   // Today button
   document.getElementById('btn-today').addEventListener('click', () => {
     const now = new Date();
@@ -331,6 +407,9 @@ function initHandlers() {
       openModalForEdit(chip.dataset.eventId);
       return;
     }
+    // Holiday chips are not editable — ignore clicks on them
+    if (e.target.closest('.event-chip--holiday')) return;
+
     const cell = e.target.closest('.day-cell');
     if (cell) {
       openModalForNew(cell.dataset.date);
