@@ -5,6 +5,11 @@ const MONTHS = [
   'July', 'August', 'September', 'October', 'November', 'December'
 ];
 
+const MONTH_ABBR = [
+  'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+  'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+];
+
 const STORAGE_KEY = 'calendar_events';
 
 const COLORS = ['blue', 'green', 'red', 'orange', 'purple'];
@@ -128,11 +133,26 @@ function renderEventsInCell(dateStr, cellEl) {
   events.forEach(ev => {
     const chip = document.createElement('button');
     chip.type = 'button';
-    chip.className = 'event-chip';
     chip.dataset.eventId = ev.id;
     chip.dataset.color = ev.color;
-    chip.textContent = ev.time ? `${ev.time} ${ev.title}` : ev.title;
     chip.setAttribute('aria-label', `Edit event: ${ev.title}`);
+
+    if (ev.time) {
+      // Timed event: dot + "HH:MM title"
+      chip.className = 'event-chip event-chip--timed';
+      const dot  = document.createElement('span');
+      dot.className = 'event-dot';
+      const text = document.createElement('span');
+      text.className = 'event-text';
+      text.textContent = `${ev.time} ${ev.title}`;
+      chip.appendChild(dot);
+      chip.appendChild(text);
+    } else {
+      // All-day event: solid colored pill
+      chip.className = 'event-chip event-chip--allday';
+      chip.textContent = ev.title;
+    }
+
     list.appendChild(chip);
   });
 
@@ -187,9 +207,14 @@ function renderCalendar() {
 
     cell.dataset.date = dateStr;
 
-    const dayNum = document.createElement('span');
+    const dayNum = document.createElement('div');
     dayNum.className = 'day-number';
-    dayNum.textContent = Number(dateStr.split('-')[2]);
+    const [, cellMonth, cellDay] = dateStr.split('-').map(Number);
+    const isFirst = cellDay === 1;
+    if (isFirst) dayNum.classList.add('is-first');
+    const inner = document.createElement('span');
+    inner.textContent = isFirst ? `${MONTH_ABBR[cellMonth - 1]} 1` : String(cellDay);
+    dayNum.appendChild(inner);
     cell.appendChild(dayNum);
 
     renderEventsInCell(dateStr, cell);
@@ -263,6 +288,14 @@ function closeModal() {
 // ===== HANDLERS =====
 
 function initHandlers() {
+
+  // Today button
+  document.getElementById('btn-today').addEventListener('click', () => {
+    const now = new Date();
+    state.currentYear  = now.getFullYear();
+    state.currentMonth = now.getMonth();
+    renderCalendar();
+  });
 
   // Month navigation
   document.getElementById('btn-prev').addEventListener('click', () => {
